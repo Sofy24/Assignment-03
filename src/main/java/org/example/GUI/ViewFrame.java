@@ -35,7 +35,7 @@ public class ViewFrame extends JFrame implements ActionListener {
 	public ViewFrame(ActorRef actorView) {
 		super(".:: Test Swing | Actors interaction ::.");
 		setSize(800,400);
-		actorView = actorView;
+		this.actorView = actorView;
 		startButton = new JButton("start");
 		stopButton = new JButton("stop");
 		chooseDir = new JButton("select dir");
@@ -135,7 +135,7 @@ public class ViewFrame extends JFrame implements ActionListener {
 			int nBands = Integer.parseInt(this.nBands.getText());
 			int maxLocInBand = Integer.parseInt(this.maxLoc.getText());
 			actorView.tell(new GUIMessageProtocol.StartMessage(dir.getAbsolutePath(),
-					n, nBands, maxLocInBand), ActorRef.noSender());
+					n, nBands, maxLocInBand, this), ActorRef.noSender());
 
 		} else if (src == stopButton) {
 			actorView.tell(new GUIMessageProtocol.StopMessage(), ActorRef.noSender());

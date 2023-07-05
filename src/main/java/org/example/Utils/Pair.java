@@ -1,4 +1,4 @@
-package org.example;
+package org.example.Utils;
 /*
  * A standard generic Pair<X,Y>, with getters, hashCode, equals, and toString well implemented. 
  */

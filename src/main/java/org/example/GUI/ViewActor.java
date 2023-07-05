@@ -2,9 +2,7 @@ package org.example.GUI;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import org.example.*;
-import org.example.CommandLine.MessageProtocol;
-import org.example.CommandLine.WorkerActor;
+import org.example.Utils.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,6 +18,7 @@ public class ViewActor extends AbstractActor {
 	private List<LongRange> ranges;
 	private int longestFiles;
 	private final static int FILES_PER_ACTOR = 50;
+	private ViewFrame viewFrame;
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
@@ -37,7 +36,7 @@ public class ViewActor extends AbstractActor {
 	}
 
 	private void startSystem(GUIMessageProtocol.StartMessage message) {
-		//start the system
+		viewFrame = message.getViewFrame();
 		//get all files
 		fileList = new ArrayList<>(Objects.requireNonNull(FileSearcher.getAllFilesWithPaths(message.getDirectory())));
 		workers = new ArrayList<>();
@@ -45,27 +44,28 @@ public class ViewActor extends AbstractActor {
 		longestFiles = message.getLongestFiles();
 		int numberOfFiles = fileList.size();
 		ranges = CreateRange.generateRanges(message.getMaxLines() , message.getNumberOfRanges());
-		//change context
-		for (int i = 0; i <= numberOfFiles / FILES_PER_ACTOR; i++) {
-			ActorRef worker = this.getContext().actorOf(Props.create(WorkerActor.class), "worker-" + i);
-			worker.tell(new MessageProtocol.ReceiveFilesMessage(fileList.subList(i * FILES_PER_ACTOR,
-					Math.min((i + 1) * FILES_PER_ACTOR, numberOfFiles)), ranges, this.getSelf()), this.getSelf());
-			workers.add(worker);
-			getContext().watch(worker);
-		}
 		//change behaviour to handle interaction with workers and stopFlag
 		this.getContext().become(handleWorkersBehaviour());
+		//create worker and assign files
+		for (int i = 0; i <= numberOfFiles / FILES_PER_ACTOR; i++) {
+			ActorRef worker = this.getContext().actorOf(Props.create(WorkerActor.class), "worker-" + i);
+			worker.tell(new GUIMessageProtocol.ReceiveFilesMessage(fileList.subList(i * FILES_PER_ACTOR,
+					Math.min((i + 1) * FILES_PER_ACTOR, numberOfFiles)), ranges, this.getSelf()), this.getSelf());
+			workers.add(worker);
+		}
 	}
 
 	private void storeComputedFile(GUIMessageProtocol.ComputedFileMessage message) {
 		computedFiles.add(message.getComputedFile());
 		//update grafica
+
 		if (computedFiles.size() == fileList.size()) {
-			System.out.println("FINISH");
-			//segnala alla grafica che hai finito
+			//finished computation
+			//kill all workers
 			workers.forEach(worker -> getContext().stop(worker));
 			Report report = new Report(computedFiles, ranges, longestFiles);
 			report.getResults();
+			//restore the original behaviour
 			this.getContext().become(createReceive());
 		}
 		if (!stopFlag) {
@@ -79,6 +79,7 @@ public class ViewActor extends AbstractActor {
 
 	private void restartSystem(GUIMessageProtocol.StartMessage message) {
 		stopFlag = false;
+		//restart all workers
 		workers.forEach(worker -> worker.tell(new GUIMessageProtocol.ContinueMessage(), getSelf()));
 	}
 

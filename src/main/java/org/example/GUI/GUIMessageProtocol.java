@@ -1,9 +1,9 @@
 package org.example.GUI;
 
 import akka.actor.ActorRef;
-import org.example.ComputedFile;
-import org.example.FilePath;
-import org.example.LongRange;
+import org.example.Utils.ComputedFile;
+import org.example.Utils.FilePath;
+import org.example.Utils.LongRange;
 
 import java.util.List;
 
@@ -14,11 +14,13 @@ public interface GUIMessageProtocol {
         private final int longestFiles;
         private final int numberOfRanges;
         private final int maxLines;
-        public StartMessage(String directory, int longestFiles, int numberOfRanges, int maxLines) {
+        private final ViewFrame viewFrame;
+        public StartMessage(String directory, int longestFiles, int numberOfRanges, int maxLines, ViewFrame viewFrame) {
             this.directory = directory;
             this.longestFiles = longestFiles;
             this.numberOfRanges = numberOfRanges;
             this.maxLines = maxLines;
+            this.viewFrame = viewFrame;
         }
 
         public String getDirectory() {
@@ -35,6 +37,10 @@ public interface GUIMessageProtocol {
 
         public int getMaxLines() {
             return maxLines;
+        }
+
+        public ViewFrame getViewFrame() {
+            return viewFrame;
         }
     }
 
