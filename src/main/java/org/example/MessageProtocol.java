@@ -1,8 +1,12 @@
 package org.example;
 
-public class MessageProtocol {
+import akka.actor.ActorRef;
 
-    public static class StartMessage {
+import java.util.List;
+
+public interface MessageProtocol {
+
+    class StartMessage {
 
         private final String directory;
         private final int number_of_ranges;
@@ -31,6 +35,15 @@ public class MessageProtocol {
 
         public int getLeaderboard() {
             return leaderboard;
+        }
+    }
+
+    class ReceiveFiles{
+        public final ActorRef worker;
+        public final List<FilePath> files;
+        public ReceiveFiles(ActorRef worker, List<FilePath> files) {
+            this.worker = worker;
+            this.files = files;
         }
     }
 }
