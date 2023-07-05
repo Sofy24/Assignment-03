@@ -3,6 +3,7 @@ package org.example;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
+import akka.actor.typed.javadsl.Behaviors;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,7 +13,8 @@ public class MasterActor extends AbstractActor {
     private List<FilePath> fileList;
     private List<ActorRef> workers;
     private List<ComputedFile> computedFiles;
-    int numberOfFiles;
+    private List<LongRange> ranges;
+    private int leaderboard;
     private final static int FILES_PER_ACTOR = 50;
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
@@ -29,8 +31,9 @@ public class MasterActor extends AbstractActor {
         fileList = new ArrayList<>(Objects.requireNonNull(FileSearcher.getAllFilesWithPaths(message.getDirectory())));
         workers = new ArrayList<>();
         computedFiles = new ArrayList<>();
-        numberOfFiles = fileList.size();
-        List<LongRange> ranges = CreateRange.generateRanges(message.getMaxLines() , message.getNumberOfRanges());
+        leaderboard = message.getLeaderboard();
+        int numberOfFiles = fileList.size();
+        ranges = CreateRange.generateRanges(message.getMaxLines() , message.getNumberOfRanges());
         //change context
         for (int i = 0; i <= numberOfFiles / FILES_PER_ACTOR; i++) {
             ActorRef worker = this.getContext().actorOf(Props.create(WorkerActor.class), "worker-" + i);
@@ -39,15 +42,15 @@ public class MasterActor extends AbstractActor {
             workers.add(worker);
             getContext().watch(worker);
         }
-        //change behaviour for the rest
     }
 
     private void receiveComputedFiles(MessageProtocol.ComputedFilesMessage message) {
         computedFiles.addAll(message.getComputedFiles());
-        System.out.println("received "+ workers.size());
         workers.remove(0);
         if (workers.isEmpty()) {
-            System.out.println("TOTAL FINISH");
+            Report report = new Report(computedFiles, ranges, leaderboard);
+            report.getResults();
+            System.exit(0);
         }
     }
 }
