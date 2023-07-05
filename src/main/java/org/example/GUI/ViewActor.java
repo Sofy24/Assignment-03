@@ -51,8 +51,6 @@ public class ViewActor extends AbstractActor {
 		longestFiles = message.getLongestFiles();
 		int numberOfFiles = fileList.size();
 		ranges = CreateRange.generateRanges(message.getMaxLines() , message.getNumberOfRanges());
-		//change behaviour to handle interaction with workers and stopFlag
-		this.getContext().become(handleWorkersBehaviour());
 		//create worker and assign files
 		for (int i = 0; i <= numberOfFiles / FILES_PER_ACTOR; i++) {
 			ActorRef worker = this.getContext().actorOf(Props.create(WorkerActor.class), "worker-" + i);
@@ -60,6 +58,8 @@ public class ViewActor extends AbstractActor {
 					Math.min((i + 1) * FILES_PER_ACTOR, numberOfFiles)), ranges, this.getSelf()), this.getSelf());
 			workers.add(worker);
 		}
+		//change behaviour to handle interaction with workers and stopFlag
+		this.getContext().become(handleWorkersBehaviour());
 	}
 
 	private void storeComputedFile(GUIMessageProtocol.ComputedFileMessage message) {
@@ -69,13 +69,12 @@ public class ViewActor extends AbstractActor {
 		this.distributionFrame.updateDistribution(new ArrayList<>(computedFiles), ranges);
 		if (computedFiles.size() == fileList.size()) {
 			//finished computation
-			//kill all workers
 			viewFrame.done();
+			//kill all workers
 			workers.forEach(worker -> getContext().stop(worker));
-			Report report = new Report(computedFiles, ranges, longestFiles);
-			report.getResults();
 			//restore the original behaviour
 			this.getContext().become(createReceive());
+			return;
 		}
 		if (!stopFlag) {
 			message.replyTo.tell(new GUIMessageProtocol.ContinueMessage(), getSelf());

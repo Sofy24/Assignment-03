@@ -6,6 +6,7 @@ import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 import javax.swing.*;
 
 
@@ -153,7 +154,10 @@ public class ViewFrame extends JFrame implements ActionListener {
 		List<String> displayFiles = files.stream()
 				.sorted(Comparator.comparing(ComputedFile::getLength).reversed())
 				.limit(nLongest)
-				.map(f -> f.getFilePath().getCompleteFilePath().substring(f.getFilePath().getCompleteFilePath().lastIndexOf("\\") + 1).concat(f.getLength().toString())).toList();
+				.map(f -> f.getFilePath().getCompleteFilePath()
+						.substring(f.getFilePath().getCompleteFilePath()
+								.lastIndexOf("\\") + 1).concat(f.getLength().toString()))
+				.collect(Collectors.toList());
 		SwingUtilities.invokeLater(() -> {
 			sourceListArea.setText("");
 			for(String file : displayFiles){
