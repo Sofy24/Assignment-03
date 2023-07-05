@@ -1,7 +1,5 @@
 package org.example;
 
-import akka.actor.ActorRef;
-
 import java.util.List;
 
 public interface MessageProtocol {
@@ -9,15 +7,15 @@ public interface MessageProtocol {
     class StartMessage {
 
         private final String directory;
-        private final int number_of_ranges;
-        private final int max_lines;
+        private final int numberOfRanges;
+        private final int maxLines;
         private final int leaderboard;
 
 
         public StartMessage(String directory, int number_of_ranges, int max_lines, int leaderboard) {
             this.directory = directory;
-            this.number_of_ranges = number_of_ranges;
-            this.max_lines = max_lines;
+            this.numberOfRanges = number_of_ranges;
+            this.maxLines = max_lines;
             this.leaderboard = leaderboard;
         }
 
@@ -25,12 +23,12 @@ public interface MessageProtocol {
             return directory;
         }
 
-        public int getNumber_of_ranges() {
-            return number_of_ranges;
+        public int getNumberOfRanges() {
+            return numberOfRanges;
         }
 
-        public int getMax_lines() {
-            return max_lines;
+        public int getMaxLines() {
+            return maxLines;
         }
 
         public int getLeaderboard() {
@@ -38,12 +36,20 @@ public interface MessageProtocol {
         }
     }
 
-    class ReceiveFiles{
-        public final ActorRef worker;
+    class ReceiveFilesMessage {
         public final List<FilePath> files;
-        public ReceiveFiles(ActorRef worker, List<FilePath> files) {
-            this.worker = worker;
+        public final List<LongRange> ranges;
+        public ReceiveFilesMessage(List<FilePath> files, List<LongRange> ranges) {
             this.files = files;
+            this.ranges = ranges;
+        }
+
+        public List<FilePath> getFiles() {
+            return files;
+        }
+
+        public List<LongRange> getRanges() {
+            return ranges;
         }
     }
 }

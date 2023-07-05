@@ -1,14 +1,18 @@
 package org.example;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
+import akka.actor.Props;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 public class MasterActor extends AbstractActor {
-    private final List<FilePath> fileList = new ArrayList<>();
-    private final static int NUMBER_OF_FILES = 50;
+    private List<FilePath> fileList;
+    private List<ActorRef> workers;
+    int numberOfFiles;
+    private final static int FILES_PER_ACTOR = 50;
     public AbstractActor.Receive createReceive() {
         return receiveBuilder()
                 .match(MessageProtocol.StartMessage.class, this::startSystem)
@@ -17,8 +21,17 @@ public class MasterActor extends AbstractActor {
 
     private void startSystem(MessageProtocol.StartMessage message) {
         //start the system
-        fileList.addAll(Objects.requireNonNull(FileSearcher.getAllFilesWithPaths(message.getDirectory())));
-
+        //get all files
+        fileList = new ArrayList<>(Objects.requireNonNull(FileSearcher.getAllFilesWithPaths(message.getDirectory())));
+        workers = new ArrayList<>();
+        numberOfFiles = fileList.size();
+        List<LongRange> ranges = CreateRange.generateRanges(message.getMaxLines() , message.getNumberOfRanges());
+        for (int i = 0; i <= numberOfFiles / FILES_PER_ACTOR; i++) {
+            ActorRef worker = this.getContext().actorOf(Props.create(WorkerActor.class), "worker-" + i);
+            worker.tell(new MessageProtocol.ReceiveFilesMessage(fileList.subList(i * FILES_PER_ACTOR,
+                    Math.min((i + 1) * FILES_PER_ACTOR, numberOfFiles)), ranges), this.getSelf());
+            workers.add(worker);
+        }
         //change behaviour for the rest
     }
 }
