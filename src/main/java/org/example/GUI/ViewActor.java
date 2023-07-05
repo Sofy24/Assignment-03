@@ -32,10 +32,9 @@ public class ViewActor extends AbstractActor {
 		return receiveBuilder()
 				.match(GUIMessageProtocol.StartMessage.class, this::restartSystem)
 				.match(GUIMessageProtocol.StopMessage.class, this::stopSystem)
+				.match(GUIMessageProtocol.ComputedFileMessage.class, this::storeComputedFile)
 				.build();
 	}
-
-
 
 	private void startSystem(GUIMessageProtocol.StartMessage message) {
 		//start the system
@@ -58,7 +57,21 @@ public class ViewActor extends AbstractActor {
 		this.getContext().become(handleWorkersBehaviour());
 	}
 
-
+	private void storeComputedFile(GUIMessageProtocol.ComputedFileMessage message) {
+		computedFiles.add(message.getComputedFile());
+		//update grafica
+		if (computedFiles.size() == fileList.size()) {
+			System.out.println("FINISH");
+			//segnala alla grafica che hai finito
+			workers.forEach(worker -> getContext().stop(worker));
+			Report report = new Report(computedFiles, ranges, longestFiles);
+			report.getResults();
+			this.getContext().become(createReceive());
+		}
+		if (!stopFlag) {
+			message.replyTo.tell(new GUIMessageProtocol.ContinueMessage(), getSelf());
+		}
+	}
 
 	private void stopSystem(GUIMessageProtocol.StopMessage message) {
 		stopFlag = true;

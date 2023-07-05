@@ -1,6 +1,7 @@
 package org.example.GUI;
 
 import akka.actor.ActorRef;
+import org.example.ComputedFile;
 import org.example.FilePath;
 import org.example.LongRange;
 
@@ -53,6 +54,19 @@ public interface GUIMessageProtocol {
 
         public List<LongRange> getRanges() {
             return ranges;
+        }
+    }
+
+    class ComputedFileMessage {
+        private final ComputedFile computedFile;
+        public final ActorRef replyTo;
+        public ComputedFileMessage(ComputedFile computedFile, ActorRef replyTo) {
+            this.computedFile = computedFile;
+            this.replyTo = replyTo;
+        }
+
+        public ComputedFile getComputedFile() {
+            return computedFile;
         }
     }
 
