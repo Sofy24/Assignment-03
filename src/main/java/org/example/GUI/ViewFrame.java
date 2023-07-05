@@ -3,8 +3,6 @@ package org.example.GUI;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 import java.io.File;
 import javax.swing.*;
 
@@ -136,10 +134,11 @@ public class ViewFrame extends JFrame implements ActionListener {
 			int n = Integer.parseInt(nMaxFilesToRank.getText());
 			int nBands = Integer.parseInt(this.nBands.getText());
 			int maxLocInBand = Integer.parseInt(this.maxLoc.getText());
-			actorView.tell(new GUIMessageProtocol.startMessage(dir.getAbsolutePath(), n, nBands, maxLocInBand), ActorRef.noSender());
+			actorView.tell(new GUIMessageProtocol.StartMessage(dir.getAbsolutePath(),
+					n, nBands, maxLocInBand), ActorRef.noSender());
 
 		} else if (src == stopButton) {
-			actorView.tell(new GUIMessageProtocol.stopMessage(), ActorRef.noSender());
+			actorView.tell(new GUIMessageProtocol.StopMessage(), ActorRef.noSender());
 			this.state.setText("Stopped.");
 			this.startButton.setEnabled(true);
 			this.stopButton.setEnabled(false);

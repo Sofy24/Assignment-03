@@ -1,6 +1,8 @@
-package org.example;
+package org.example.CommandLine;
 
 import akka.actor.AbstractActor;
+import org.example.ComputeFile;
+import org.example.ComputedFile;
 
 import java.util.ArrayList;
 import java.util.List;

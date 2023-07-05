@@ -1,4 +1,4 @@
-package org.example;
+package org.example.CommandLine;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;

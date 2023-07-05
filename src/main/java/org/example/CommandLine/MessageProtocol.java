@@ -1,6 +1,9 @@
-package org.example;
+package org.example.CommandLine;
 
 import akka.actor.ActorRef;
+import org.example.ComputedFile;
+import org.example.FilePath;
+import org.example.LongRange;
 
 import java.util.List;
 

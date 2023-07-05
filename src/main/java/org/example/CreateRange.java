@@ -3,7 +3,7 @@ package org.example;
 import java.util.ArrayList;
 import java.util.List;
 
- class CreateRange {
+ public class CreateRange {
 
     public static List<LongRange> generateRanges(int maxLines, int numberOfRanges) {
         List<LongRange> ranges = new ArrayList<>();

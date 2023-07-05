@@ -1,9 +1,9 @@
-package org.example;
+package org.example.CommandLine;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.actor.typed.javadsl.Behaviors;
+import org.example.*;
 
 import java.util.ArrayList;
 import java.util.List;
