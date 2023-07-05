@@ -1,5 +1,7 @@
 package org.example;
 
+import akka.actor.ActorRef;
+
 import java.util.List;
 
 public interface MessageProtocol {
@@ -37,11 +39,14 @@ public interface MessageProtocol {
     }
 
     class ReceiveFilesMessage {
-        public final List<FilePath> files;
-        public final List<LongRange> ranges;
-        public ReceiveFilesMessage(List<FilePath> files, List<LongRange> ranges) {
+        private final List<FilePath> files;
+        private final List<LongRange> ranges;
+
+        public final ActorRef replyTo;
+        public ReceiveFilesMessage(List<FilePath> files, List<LongRange> ranges, ActorRef replyTo) {
             this.files = files;
             this.ranges = ranges;
+            this.replyTo = replyTo;
         }
 
         public List<FilePath> getFiles() {
@@ -50,6 +55,18 @@ public interface MessageProtocol {
 
         public List<LongRange> getRanges() {
             return ranges;
+        }
+    }
+
+    class ComputedFilesMessage {
+        private final List<ComputedFile> computedFiles;
+
+        public ComputedFilesMessage(List<ComputedFile> computedFiles) {
+            this.computedFiles = computedFiles;
+        }
+
+        public List<ComputedFile> getComputedFiles() {
+            return computedFiles;
         }
     }
 }
