@@ -80,4 +80,11 @@ public interface GUIMessageProtocol {
 
     class ContinueMessage {}
 
+    class StartDistributionMessage {
+        final ViewDistributionFrame distributionFrame;
+        public StartDistributionMessage(ViewDistributionFrame distributionFrame){
+            this.distributionFrame = distributionFrame;
+        }
+    }
+
 }

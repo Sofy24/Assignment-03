@@ -4,10 +4,13 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Comparator;
+import java.util.List;
 import javax.swing.*;
 
 
 import akka.actor.ActorRef;
+import org.example.Utils.ComputedFile;
 
 public class ViewFrame extends JFrame implements ActionListener {
 	private final JButton startButton;
@@ -24,8 +27,6 @@ public class ViewFrame extends JFrame implements ActionListener {
 	private final JPanel filesElabPanel;
 	private File dir;
 	private String selectedDirFullPath;
-	/*private ArrayList<InputListener> listeners;
-	private InputListener listenerExecutors;*/
 	private String defStartDir;
 	private int defaultMaxFileToRank;
 	private int defaultNumBands;
@@ -147,10 +148,35 @@ public class ViewFrame extends JFrame implements ActionListener {
 		}
 
 	}
+
+	public void update(List<ComputedFile> files, int nLongest) {
+		List<String> displayFiles = files.stream()
+				.sorted(Comparator.comparing(ComputedFile::getLength).reversed())
+				.limit(nLongest)
+				.map(f -> f.getFilePath().getCompleteFilePath().substring(f.getFilePath().getCompleteFilePath().lastIndexOf("\\") + 1).concat(f.getLength().toString())).toList();
+		SwingUtilities.invokeLater(() -> {
+			sourceListArea.setText("");
+			for(String file : displayFiles){
+				sourceListArea.append(file + "\n");
+			}
+			this.numSrcProcessed.setText(String.valueOf(files.size()));
+		});
+
+	}
 	
 	public void display() {
 		SwingUtilities.invokeLater(() -> {
 			this.setVisible(true);
 		});
+	}
+
+	public void done() {
+		SwingUtilities.invokeLater(() -> {
+			this.startButton.setEnabled(true);
+			this.stopButton.setEnabled(false);
+			chooseDir.setEnabled(true);
+			this.state.setText("Done.");
+		});
+
 	}
 }

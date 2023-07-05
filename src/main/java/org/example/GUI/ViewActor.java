@@ -19,12 +19,19 @@ public class ViewActor extends AbstractActor {
 	private int longestFiles;
 	private final static int FILES_PER_ACTOR = 50;
 	private ViewFrame viewFrame;
+	private ViewDistributionFrame distributionFrame;
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
 				.match(GUIMessageProtocol.StartMessage.class, this::startSystem)
+				.match(GUIMessageProtocol.StartDistributionMessage.class, this::startDistribution)
 				.match(GUIMessageProtocol.StopMessage.class, this::stopSystem)
 				.build();
+	}
+
+
+	private void startDistribution(GUIMessageProtocol.StartDistributionMessage message) {
+		this.distributionFrame = message.distributionFrame;
 	}
 
 	private Receive handleWorkersBehaviour() {
@@ -58,10 +65,12 @@ public class ViewActor extends AbstractActor {
 	private void storeComputedFile(GUIMessageProtocol.ComputedFileMessage message) {
 		computedFiles.add(message.getComputedFile());
 		//update grafica
-
+		this.viewFrame.update(computedFiles, longestFiles);
+		this.distributionFrame.updateDistribution(new ArrayList<>(computedFiles), ranges);
 		if (computedFiles.size() == fileList.size()) {
 			//finished computation
 			//kill all workers
+			viewFrame.done();
 			workers.forEach(worker -> getContext().stop(worker));
 			Report report = new Report(computedFiles, ranges, longestFiles);
 			report.getResults();

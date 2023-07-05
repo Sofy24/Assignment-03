@@ -10,5 +10,6 @@ public class RunActorWithGUI {
     
     ActorRef act = system.actorOf(Props.create(ViewActor.class));
 	new ViewFrame(act).display();
+    new ViewDistributionFrame(act, 800, 600).display();
   }
 }
