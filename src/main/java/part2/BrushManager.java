@@ -2,12 +2,15 @@ package part2;
 
 
 import java.awt.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public class BrushManager {
     private static final int BRUSH_SIZE = 10;
     private static final int STROKE_SIZE = 2;
-    private List<Brush> brushes = new java.util.ArrayList<>();
+    private Set<Brush> brushes = new HashSet<>();
 
     void draw(final Graphics2D g) {
         brushes.forEach(brush -> {
@@ -32,11 +35,12 @@ public class BrushManager {
     public static class Brush {
         private int x, y;
         private int color;
-
-        public Brush(final int x, final int y, final int color) {
+        private final String idBrush;
+        public Brush(final int x, final int y, final int color, final String id) {
             this.x = x;
             this.y = y;
             this.color = color;
+            this.idBrush = id;
         }
 
         public void updatePosition(final int x, final int y) {
@@ -55,6 +59,10 @@ public class BrushManager {
         }
         public void setColor(int color){
             this.color = color;
+        }
+
+        public String getIdBrush() {
+            return idBrush;
         }
     }
 }

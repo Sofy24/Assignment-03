@@ -17,32 +17,20 @@ public class Users_prova {
     try {
       // Generate a random UUID
       UUID uuid = UUID.randomUUID();
-      String queueName = uuid.toString();
+      String identifier = uuid.toString();
 
       ConnectionFactory factory = new ConnectionFactory();
       factory.setHost("localhost");
       Connection connection = factory.newConnection();
       Channel channel = connection.createChannel();
-
       channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT); //BuiltinExchangeType.DIRECT
       /*channel.exchangeDelete("peer_exchange");
       channel.close();*/
-
-
-      channel.queueDeclare(queueName, false, false, false, null);
+      channel.queueDeclare(identifier, false, false, false, null);
       // Bind the queue to the exchange
-      channel.queueBind(queueName, EXCHANGE_NAME, "");
-      DeliverCallback deliverCallback1 = (consumerTag, delivery) -> {
-        String message = new String(delivery.getBody(), "UTF-8");
-        System.out.println(" [x] Received A '" + message + "' by thread "+Thread.currentThread().getName());
-        try {
-          Thread.sleep(10);
-        } catch (Exception ex) {
-          ex.printStackTrace();
-        }
-      };
+      channel.queueBind(identifier, EXCHANGE_NAME, "");
 
-      channel.basicConsume(queueName, true, deliverCallback1, consumerTag -> {});
+
       // Start consuming messages
       /*Consumer consumer = new DefaultConsumer(channel) {
         @Override
@@ -55,17 +43,11 @@ public class Users_prova {
 
       channel.basicConsume(QUEUE_NAME, true, consumer);*/
 
-      // Publish a message
-      String message2 = "Hello, peers!" + randomColor();
-      channel.basicPublish(EXCHANGE_NAME, "", null, message2.getBytes("UTF-8"));
-      System.out.println("Sent message: " + message2);
-
-
       var brushManager = new BrushManager();
-      var localBrush = new BrushManager.Brush(0, 0, randomColor());
-      var fooBrush = new BrushManager.Brush(0, 0, randomColor());
+      var localBrush = new BrushManager.Brush(0, 0, randomColor(), identifier);
+      //var fooBrush = new BrushManager.Brush(0, 0, randomColor());
       brushManager.addBrush(localBrush);
-      brushManager.addBrush(fooBrush);
+      //brushManager.addBrush(fooBrush);
       PixelGrid grid = new PixelGrid(40, 40);
 
       Random rand = new Random();
@@ -86,10 +68,31 @@ public class Users_prova {
       view.addPixelGridEventListener((x, y) -> {
         grid.set(x, y, localBrush.getColor());
         view.refresh();
-        String message = "pixel colored! " + x + " " + y + " " + localBrush.getColor();
-        channel.basicPublish(NO_EXCHANGE_USED, "", null, message.getBytes("UTF-8"));
+        //the message contains id, x, y, color of the brush
+        String message = localBrush.getIdBrush() + "_" + x + "_" + y + "_" + localBrush.getColor();
+        channel.basicPublish(EXCHANGE_NAME, "", null, message.getBytes("UTF-8"));
         System.out.println(" [x] Sent '" + message + "'");
       });
+
+      DeliverCallback deliverCallback1 = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), "UTF-8");
+        System.out.println(" [x] Received A '" + message + "' by thread "+Thread.currentThread().getName());
+        update(message, view, grid, brushManager);
+        try {
+          Thread.sleep(10);
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
+      };
+
+      channel.basicConsume(identifier, true, deliverCallback1, consumerTag -> {});
+
+      // Publish a message
+
+      //String message2 = localBrush.getIdBrush() + "-" + localBrush.getX() + "-" + localBrush.getY() + "-" + localBrush.getColor();
+
+      //channel.basicPublish(EXCHANGE_NAME, "", null, message2.getBytes("UTF-8"));
+      //System.out.println("Sent message: " + message2);
 
       view.addColorChangedListener(localBrush::setColor);
 
@@ -110,6 +113,15 @@ public class Users_prova {
   public static int randomColor() {
     Random rand = new Random();
     return rand.nextInt(256 * 256 * 256);
+  }
+
+  public static void update(String message, PixelGridView view, PixelGrid grid, BrushManager brushManager){
+    System.out.println("message"+message);
+    String[] messageContent = message.split("_");
+    //the message contains id, x, y, color of the brush
+    //brushManager.addBrush(new BrushManager.Brush(Integer.parseInt(messageContent[1]), Integer.parseInt(messageContent[2]),Integer.parseInt(messageContent[3]), messageContent[0]));
+    grid.set(Integer.parseInt(messageContent[1]), Integer.parseInt(messageContent[2]), Integer.parseInt(messageContent[3]));
+    view.refresh();
   }
 
 
