@@ -1,6 +1,7 @@
 package part2;
 import com.rabbitmq.client.*;
 
+import javax.swing.*;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
@@ -74,9 +75,9 @@ public class Users_prova {
       DeliverCallback deliverCallbackMouse = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         System.out.println(" [x] Received A '" + message + "' by thread "+Thread.currentThread().getName());
-        updateMouse(message, view, grid, brushManager);
+        updateMouse(message, view, brushManager);
         try {
-          Thread.sleep(1000);
+          Thread.sleep(10);
         } catch (Exception ex) {
           ex.printStackTrace();
         }
@@ -84,7 +85,6 @@ public class Users_prova {
 
       channel.basicConsume(identifier + "color", true, deliverCallbackColor, consumerTag -> {});
       channel.basicConsume(identifier + "mouse", true, deliverCallbackMouse, consumerTag -> {});
-
       view.addColorChangedListener(localBrush::setColor);
 
       view.display();
@@ -109,18 +109,22 @@ public class Users_prova {
   }
 
   public static void updateColor(String message, PixelGridView view, PixelGrid grid){
-    String[] messageContent = message.split("_");
-    //the message contains x, y, color of the brush
-    grid.set(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1]), Integer.parseInt(messageContent[2]));
-    view.refresh();
+    SwingUtilities.invokeLater(() -> {
+      String[] messageContent = message.split("_");
+      //the message contains x, y, color of the brush
+      grid.set(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1]), Integer.parseInt(messageContent[2]));
+      view.refresh();
+    });
   }
 
-  private static void updateMouse(String message, PixelGridView view, PixelGrid grid, BrushManager brushManager) {
-    String[] messageContent = message.split("_");
-    //the message contains the x and y of the mouse and the id and color of the brush
-    BrushManager.Brush currentBrush = brushManager.getBrush(messageContent);
-    currentBrush.updatePosition(currentBrush.getX(), currentBrush.getY());
-    view.refresh();
+  private static void updateMouse(String message, PixelGridView view, BrushManager brushManager) {
+    SwingUtilities.invokeLater(() -> {
+      String[] messageContent = message.split("_");
+      //the message contains the x and y of the mouse and the id and color of the brush
+      BrushManager.Brush currentBrush = brushManager.getBrush(messageContent);
+      currentBrush.updatePosition(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1]));
+      view.refresh();
+    });
   }
 
 
