@@ -1,10 +1,10 @@
 package part2;
 import com.rabbitmq.client.*;
-import part1.Utils.Pair;
 
 import java.io.IOException;
 import java.util.Random;
 import java.util.concurrent.TimeoutException;
+import java.util.UUID;
 
 public class Users_prova {
 
@@ -15,7 +15,10 @@ public class Users_prova {
 
   public static void main(String[] argv) throws Exception {
     try {
-      String queueName = "User" + randomColor();
+      // Generate a random UUID
+      UUID uuid = UUID.randomUUID();
+      String queueName = uuid.toString();
+
       ConnectionFactory factory = new ConnectionFactory();
       factory.setHost("localhost");
       Connection connection = factory.newConnection();
