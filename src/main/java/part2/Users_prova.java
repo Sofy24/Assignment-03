@@ -8,8 +8,8 @@ import java.util.concurrent.TimeoutException;
 import java.util.UUID;
 
 public class Users_prova {
-  private static final String EXCHANGE_NAME_COLOR = "Color";
-  private static final String EXCHANGE_NAME_MOUSE = "Mouse";
+  private static final String EXCHANGE_NAME = "name exchange";
+
 
   public static void main(String[] argv) throws Exception {
     try {
@@ -19,19 +19,16 @@ public class Users_prova {
 
       ConnectionFactory factory = new ConnectionFactory();
       factory.setHost("localhost");
-      Connection connectionColor = factory.newConnection();
-      Connection connectionMouse = factory.newConnection();
-      Channel channelColor = connectionColor.createChannel();
-      Channel channelMouse = connectionMouse.createChannel();
-      channelColor.exchangeDeclare(EXCHANGE_NAME_COLOR, BuiltinExchangeType.TOPIC);
-      channelMouse.exchangeDeclare(EXCHANGE_NAME_MOUSE, BuiltinExchangeType.TOPIC);
-      /*channelColor.exchangeDelete("peer_exchange");
-      channelColor.close();*/
-      channelColor.queueDeclare(identifier, false, false, false, null);
-      channelMouse.queueDeclare(identifier, false, false, false, null);
+      Connection connection = factory.newConnection();
+      Channel channel = connection.createChannel();
+      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.TOPIC);
+      /*channel.exchangeDelete("peer_exchange");
+      channel.close();*/
+      channel.queueDeclare(identifier + "mouse", false, false, false, null);
+      channel.queueDeclare(identifier + "color", false, false, false, null);
       // Bind the queue to the exchange
-      channelColor.queueBind(identifier, EXCHANGE_NAME_COLOR, EXCHANGE_NAME_COLOR);
-      channelMouse.queueBind(identifier, EXCHANGE_NAME_MOUSE, EXCHANGE_NAME_MOUSE);
+      channel.queueBind(identifier + "mouse", EXCHANGE_NAME, "topic.mouse");
+      channel.queueBind(identifier + "color", EXCHANGE_NAME, "topic.color");
 
       var brushManager = new BrushManager();
       var localBrush = new BrushManager.Brush(0, 0, randomColor(), identifier);
@@ -50,7 +47,7 @@ public class Users_prova {
         view.refresh();
         //the message contains the x and y of the mouse and the id and color of the brush
         String message = x + "_" + y + "_" + localBrush.getIdBrush() + "_" +  localBrush.getColor();
-        channelMouse.basicPublish(EXCHANGE_NAME_MOUSE, EXCHANGE_NAME_MOUSE, null, message.getBytes("UTF-8"));
+        channel.basicPublish(EXCHANGE_NAME, "topic.mouse", null, message.getBytes(StandardCharsets.UTF_8));
         System.out.println(" [x] Sent '" + message + "'");
       });
 
@@ -59,7 +56,7 @@ public class Users_prova {
         view.refresh();
         //the message contains x, y, color of the brush
         String message = x + "_" + y + "_" + localBrush.getColor();
-        channelColor.basicPublish(EXCHANGE_NAME_COLOR, EXCHANGE_NAME_COLOR, null, message.getBytes("UTF-8"));
+        channel.basicPublish(EXCHANGE_NAME, "topic.color", null, message.getBytes(StandardCharsets.UTF_8));
         System.out.println(" [x] Sent '" + message + "'");
       });
 
@@ -85,8 +82,8 @@ public class Users_prova {
         }
       };
 
-      channelColor.basicConsume(identifier, true, deliverCallbackColor, consumerTag -> {});
-      channelMouse.basicConsume(identifier, true, deliverCallbackMouse, consumerTag -> {});
+      channel.basicConsume(identifier + "color", true, deliverCallbackColor, consumerTag -> {});
+      channel.basicConsume(identifier + "mouse", true, deliverCallbackMouse, consumerTag -> {});
 
       view.addColorChangedListener(localBrush::setColor);
 
