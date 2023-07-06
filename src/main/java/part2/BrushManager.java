@@ -2,10 +2,8 @@ package part2;
 
 
 import java.awt.*;
-import java.util.HashSet;
+import java.util.*;
 import java.util.List;
-import java.util.Set;
-import java.util.UUID;
 
 public class BrushManager {
     private static final int BRUSH_SIZE = 10;
@@ -26,6 +24,13 @@ public class BrushManager {
 
     void addBrush(final Brush brush) {
         brushes.add(brush);
+    }
+
+    Brush getBrush(final String[] brushInfo){
+        Optional<Brush> brush = brushes.stream().filter(b -> b.getIdBrush().equals(brushInfo[2])).findFirst();
+        Brush currentBrush = brush.orElseGet(() -> new Brush(Integer.parseInt(brushInfo[0]), Integer.parseInt(brushInfo[1]), Integer.parseInt(brushInfo[3]), brushInfo[2]));
+        brushes.add(currentBrush);
+        return currentBrush;
     }
 
     void removeBrush(final Brush brush) {
