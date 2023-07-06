@@ -8,25 +8,40 @@ import java.util.concurrent.TimeoutException;
 
 public class Users_prova {
 
-  private final static String QUEUE_NAME = "hello";
+  //private final static String QUEUE_NAME = "hello";
   private final static String NO_EXCHANGE_USED = "";
 
   private static final String EXCHANGE_NAME = "peer_exchange";
 
   public static void main(String[] argv) throws Exception {
     try {
+      String queueName = "User" + randomColor();
       ConnectionFactory factory = new ConnectionFactory();
       factory.setHost("localhost");
       Connection connection = factory.newConnection();
       Channel channel = connection.createChannel();
 
-      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.DIRECT);
-      channel.queueDeclare(QUEUE_NAME, false, false, false, null);
-      // Bind the queue to the exchange
-      channel.queueBind(QUEUE_NAME, EXCHANGE_NAME, "");
+      channel.exchangeDeclare(EXCHANGE_NAME, BuiltinExchangeType.FANOUT); //BuiltinExchangeType.DIRECT
+      /*channel.exchangeDelete("peer_exchange");
+      channel.close();*/
 
+
+      channel.queueDeclare(queueName, false, false, false, null);
+      // Bind the queue to the exchange
+      channel.queueBind(queueName, EXCHANGE_NAME, "");
+      DeliverCallback deliverCallback1 = (consumerTag, delivery) -> {
+        String message = new String(delivery.getBody(), "UTF-8");
+        System.out.println(" [x] Received A '" + message + "' by thread "+Thread.currentThread().getName());
+        try {
+          Thread.sleep(10);
+        } catch (Exception ex) {
+          ex.printStackTrace();
+        }
+      };
+
+      channel.basicConsume(queueName, true, deliverCallback1, consumerTag -> {});
       // Start consuming messages
-      Consumer consumer = new DefaultConsumer(channel) {
+      /*Consumer consumer = new DefaultConsumer(channel) {
         @Override
         public void handleDelivery(String consumerTag, Envelope envelope,
                                    AMQP.BasicProperties properties, byte[] body) throws IOException {
@@ -35,7 +50,7 @@ public class Users_prova {
         }
       };
 
-      channel.basicConsume(QUEUE_NAME, true, consumer);
+      channel.basicConsume(QUEUE_NAME, true, consumer);*/
 
       // Publish a message
       String message2 = "Hello, peers!" + randomColor();
@@ -69,8 +84,8 @@ public class Users_prova {
         grid.set(x, y, localBrush.getColor());
         view.refresh();
         String message = "pixel colored! " + x + " " + y + " " + localBrush.getColor();
-//        channel.basicPublish(NO_EXCHANGE_USED, QUEUE_NAME, null, message.getBytes("UTF-8"));
-//        System.out.println(" [x] Sent '" + message + "'");
+        channel.basicPublish(NO_EXCHANGE_USED, "", null, message.getBytes("UTF-8"));
+        System.out.println(" [x] Sent '" + message + "'");
       });
 
       view.addColorChangedListener(localBrush::setColor);
