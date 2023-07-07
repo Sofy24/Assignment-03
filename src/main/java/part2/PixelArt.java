@@ -12,7 +12,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 
-public class Users_prova {
+public class PixelArt {
   private static final String EXCHANGE_NAME = "name exchange";
 
 
@@ -91,23 +91,14 @@ public class Users_prova {
         System.out.println(" [x] Received A '" + message + "' by thread "+Thread.currentThread().getName());
         if (message.equals("NEED_HISTORY")){
           if ( !coloredPixels.isEmpty()){
-            //HistoryMap historyMap = new HistoryMap();
-            //Map<String, Integer> parsedMap = coloredPixels.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getX()+"X"+e.getKey().getY(), Map.Entry::getValue));
-            //historyMap.setWrappedMap(parsedMap);
             String stringMessage = coloredPixels.entrySet().stream().map(e -> e.getKey().getX()+"_"+e.getKey().getY()+"_"+e.getValue()).reduce((e1, e2) -> e1.concat("@".concat(e2))).orElse("");
-            //Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
-            //String json = customGson.toJson(historyMap);
             channel.basicPublish(EXCHANGE_NAME, "topic.history", null, stringMessage.getBytes(StandardCharsets.UTF_8));
             System.out.println(" [x] Sent '" + stringMessage + "'");
           }
         } else{
-          System.out.println(message);
-          //Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
-          //HistoryMap mapWrapper = customGson.fromJson(message.replace("\"", "\\\""), HistoryMap.class);
           String[] cellAndColor = message.split("@");
           coloredPixels.putAll(Arrays.stream(cellAndColor).collect(Collectors.toMap(e -> new Pair<>(Integer.parseInt(e.split("_")[0]), Integer.parseInt(e.split("_")[1])), e -> Integer.parseInt(e.split("_")[2]))));
           coloredPixels.forEach((p, c) -> grid.set(p.getX(), p.getY(), c));
-          coloredPixels.forEach((p, c) -> System.out.println("The truth => "+p.getX()+ p.getY()+ c));
         }
 
         try {
@@ -135,6 +126,12 @@ public class Users_prova {
             throw new RuntimeException(ex);
           }
           System.out.println(" [x] Sent '" + brushId + "'");
+          try {
+            channel.close();
+            connection.close();
+          } catch (IOException | TimeoutException ex) {
+            throw new RuntimeException(ex);
+          }
 
         }
       });
@@ -144,14 +141,6 @@ public class Users_prova {
       e.printStackTrace();
     }
   }
-
-
-
-
-    /*
-    channel.close();
-    connection.close();
-    */
 
 
   public static int randomColor() {
