@@ -65,7 +65,11 @@ public class Users_prova {
 
       view.addPixelGridEventListener((x, y) -> {
         grid.set(x, y, localBrush.getColor());
-        coloredPixels.put(localBrush.getColor(), new HashMap<>(x, y));
+        Map<Integer, Integer> coordinatesMap = new HashMap<>();
+        coordinatesMap.put(x, y);
+        coloredPixels.put(localBrush.getColor(), coordinatesMap);
+        System.out.println("adding x and y"+ "x="+x +"y="+y);
+        System.out.println("coloredPixels => "+ coloredPixels);
         view.refresh();
         //the message contains x, y, color of the brush
         String message = x + "_" + y + "_" + localBrush.getColor();
@@ -101,12 +105,14 @@ public class Users_prova {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         System.out.println(" [x] Received A '" + message + "' by thread "+Thread.currentThread().getName());
         if (message.equals("NEED_HISTORY")){
-          HistoryMap historyMap = new HistoryMap();
-          historyMap.setColoredPixels(coloredPixels);
-          Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
-          String json = customGson.toJson(historyMap);
-          channel.basicPublish(EXCHANGE_NAME, "topic.history", null, json.getBytes(StandardCharsets.UTF_8));
-          System.out.println(" [x] Sent '" + json + "'");
+          if ( !coloredPixels.isEmpty()){
+            HistoryMap historyMap = new HistoryMap();
+            historyMap.setColoredPixels(coloredPixels);
+            Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
+            String json = customGson.toJson(historyMap);
+            channel.basicPublish(EXCHANGE_NAME, "topic.history", null, json.getBytes(StandardCharsets.UTF_8));
+            System.out.println(" [x] Sent '" + json + "'");
+          }
         } else{
           System.out.println(message.replace("\"", "\\\""));
           Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
