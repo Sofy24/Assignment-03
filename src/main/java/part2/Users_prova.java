@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Collectors;
+
 import com.google.gson.Gson;
+import part1.Utils.Pair;
 
 
 public class Users_prova {
@@ -20,7 +23,7 @@ public class Users_prova {
       // Generate a random UUID
       UUID uuid = UUID.randomUUID();
       String identifier = uuid.toString();
-      Map<Integer, Map<Integer, Integer>> coloredPixels = new HashMap<>();
+      Map<Pair<Integer, Integer>, Integer> coloredPixels = new HashMap<>();
       ConnectionFactory factory = new ConnectionFactory();
       factory.setHost("localhost");
       Connection connection = factory.newConnection();
@@ -65,9 +68,7 @@ public class Users_prova {
 
       view.addPixelGridEventListener((x, y) -> {
         grid.set(x, y, localBrush.getColor());
-        Map<Integer, Integer> coordinatesMap = new HashMap<>();
-        coordinatesMap.put(x, y);
-        coloredPixels.put(localBrush.getColor(), coordinatesMap);
+        coloredPixels.put(new Pair<>(x, y), localBrush.getColor());
         System.out.println("adding x and y"+ "x="+x +"y="+y);
         System.out.println("coloredPixels => "+ coloredPixels);
         view.refresh();
@@ -94,11 +95,11 @@ public class Users_prova {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);
         System.out.println(" [x] Received A '" + message + "' by thread "+Thread.currentThread().getName());
         updateMouse(message, view, brushManager);
-        try {
+/*        try {
           Thread.sleep(10);
         } catch (Exception ex) {
           ex.printStackTrace();
-        }
+        }*/
       };
 
       DeliverCallback deliverCallbackHistory = (consumerTag, delivery) -> {
@@ -107,7 +108,8 @@ public class Users_prova {
         if (message.equals("NEED_HISTORY")){
           if ( !coloredPixels.isEmpty()){
             HistoryMap historyMap = new HistoryMap();
-            historyMap.setColoredPixels(coloredPixels);
+            Map<String, Integer> parsedMap = coloredPixels.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().getX()+"_"+e.getKey().getY(), Map.Entry::getValue));
+            historyMap.setWrappedMap(parsedMap);
             Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
             String json = customGson.toJson(historyMap);
             channel.basicPublish(EXCHANGE_NAME, "topic.history", null, json.getBytes(StandardCharsets.UTF_8));
@@ -116,9 +118,9 @@ public class Users_prova {
         } else{
           System.out.println(message.replace("\"", "\\\""));
           Gson customGson = new GsonBuilder().registerTypeHierarchyAdapter(byte[].class, new ByteArrayToBase64Adapter()).create();
-          HistoryMap mapWrapper = customGson.fromJson(message.replace('"', '\"'), HistoryMap.class);
-          System.out.println("no errors");
-          coloredPixels.putAll(mapWrapper.getColoredPixels());
+          HistoryMap mapWrapper = customGson.fromJson(message.replace("\"", "\\\""), HistoryMap.class);
+          coloredPixels.putAll(mapWrapper.getWrappedMap().entrySet().stream().collect(Collectors.toMap(e -> new Pair<>(Integer.parseInt(e.getKey().split("_")[0]), Integer.parseInt(e.getKey().split("_")[1])), e -> e.getValue())));
+
         }
 
         try {
@@ -132,8 +134,7 @@ public class Users_prova {
       channel.basicConsume(identifier + "mouse", true, deliverCallbackMouse, consumerTag -> {});
       channel.basicConsume(identifier + "history", true, deliverCallbackHistory, consumerTag -> {});
       view.addColorChangedListener(localBrush::setColor);
-      coloredPixels.forEach((c, m) -> grid.set(coloredPixels.get(c).entrySet().stream().map(Map.Entry::getKey).toList().get(0), coloredPixels.get(c).entrySet().stream().map(Map.Entry::getValue).toList().get(0), c));
-
+      coloredPixels.forEach((p, c) -> grid.set(p.getX(), p.getY(), c));
       view.display();
 
 
@@ -157,13 +158,13 @@ public class Users_prova {
     return rand.nextInt(256 * 256 * 256);
   }
 
-  public static void updateColor(String message, PixelGridView view, PixelGrid grid, Map<Integer, Map<Integer, Integer>> coloredPixels){
+  public static void updateColor(String message, PixelGridView view, PixelGrid grid, Map<Pair<Integer, Integer>, Integer> coloredPixels){
     SwingUtilities.invokeLater(() -> {
       String[] messageContent = message.split("_");
       //the message contains x, y, color of the brush
       grid.set(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1]), Integer.parseInt(messageContent[2]));
       view.refresh();
-      coloredPixels.put( Integer.parseInt(messageContent[2]), new HashMap<>(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1])));
+      coloredPixels.put(new Pair<>(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1])), Integer.parseInt(messageContent[2]));
     });
   }
 
@@ -177,7 +178,7 @@ public class Users_prova {
     });
   }
 
-    private static void consumeMessages(Channel channel, String identifier, Map<Integer, Map<Integer, Integer>> coloredPixels, PixelGridView view, PixelGrid grid) throws IOException {
+    private static void consumeMessages(Channel channel, String identifier, Map<Pair<Integer, Integer>, Integer> coloredPixels, PixelGridView view, PixelGrid grid) throws IOException {
       // Create a consumer and start consuming messages
       DeliverCallback deliverCallbackColor = (consumerTag, delivery) -> {
         String message = new String(delivery.getBody(), StandardCharsets.UTF_8);

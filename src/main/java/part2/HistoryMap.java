@@ -1,20 +1,23 @@
 package part2;
 
+import part1.Utils.Pair;
+
 import java.util.HashMap;
 import java.util.Map;
 
 public class HistoryMap {
-    private Map<Integer, Map<Integer, Integer>> coloredPixels;
+    private Map<String, Integer> wrappedMap;
 
     public HistoryMap() {
-        coloredPixels = new HashMap<>();
+        wrappedMap = new HashMap<>();
     }
 
-    public Map<Integer, Map<Integer, Integer>> getColoredPixels() {
-        return coloredPixels;
+    public Map<String, Integer> getWrappedMap() {
+        return wrappedMap;
     }
 
-    public void setColoredPixels(Map<Integer, Map<Integer, Integer>> coloredPixels) {
-        this.coloredPixels = coloredPixels;
+    public void setWrappedMap(Map<String, Integer> wrappedMap) {
+        this.wrappedMap = wrappedMap;
     }
+
 }
