@@ -3,7 +3,6 @@ package part2;
 
 import java.awt.*;
 import java.util.*;
-import java.util.List;
 
 public class BrushManager {
     private static final int BRUSH_SIZE = 10;
@@ -26,11 +25,15 @@ public class BrushManager {
         brushes.add(brush);
     }
 
-    Brush getBrush(final String[] brushInfo){
+    Brush getBrushFromInfo(final String[] brushInfo){
         Optional<Brush> brush = brushes.stream().filter(b -> b.getIdBrush().equals(brushInfo[2])).findFirst();
         Brush currentBrush = brush.orElseGet(() -> new Brush(Integer.parseInt(brushInfo[0]), Integer.parseInt(brushInfo[1]), Integer.parseInt(brushInfo[3]), brushInfo[2]));
         brushes.add(currentBrush);
         return currentBrush;
+    }
+
+    Brush getBrushFromId(final String brushId){
+        return this.brushes.stream().filter(b -> b.getIdBrush().equals(brushId)).toList().get(0);
     }
 
     void removeBrush(final Brush brush) {
