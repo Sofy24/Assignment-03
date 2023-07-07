@@ -19,6 +19,8 @@ dependencies {
 
     /* module 4.2 */
     implementation 'com.rabbitmq:amqp-client:5.17.0'
+    implementation 'com.google.code.gson:gson:2.10.1'
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.0.1'
 
     /* logging framework SLF4J */
     implementation 'org.slf4j:slf4j-api:2.0.7'
