@@ -5,6 +5,7 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.IOException;
 import java.io.Serializable;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -22,15 +23,20 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
   private PixelGridView view = new PixelGridView(grid, brushManager, 800, 600);
   private GridService gridService;
 
+  private BrushService brushService;
   public PixelArtImpl() throws IOException {
   }
 
   public void configuration()  {
     try {
+      System.out.println("CLIENT: "+ serialVersionUID +" BRUSH: "+ getLocalBrush().getBrushId());
       Registry registry = LocateRegistry.getRegistry(null);
       this.gridService = (GridService) registry.lookup("grid");
+      this.brushService = (BrushService) registry.lookup("brush");
+
       //registration of the client
       gridService.register(this);
+      brushService.addBrush(this);
       //deve essere serializzabile
       //gridService.setPixel(0, 0, 0);
     } catch (Exception e) {
@@ -42,6 +48,7 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
     //listener for the movement of the mouse
     view.addMouseMovedListener((x, y) -> {
       localBrush.updatePosition(x, y);
+      brushService.receiveMovement(localBrush);
       view.refresh();
 
     });
@@ -62,6 +69,11 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
       public void windowClosing(WindowEvent e) {
         // Perform any necessary cleanup or actions
         System.out.println("User is leaving...");
+        try {
+          brushService.removeBrush(getClientId(), getLocalBrush());
+        } catch (RemoteException ex) {
+          throw new RuntimeException(ex);
+        }
         //String brushId = localBrush.getIdBrush();
         //registration.exit(identifier);
       }
@@ -70,7 +82,7 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
     view.display();
   }
 
-
+  public UUID getClientId() {return serialVersionUID;}
 
   public static void main(String[] args) throws Exception {
     PixelArt pixelArt = new PixelArtImpl();
@@ -112,5 +124,17 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
     this.coloredPixels.forEach((p, c) -> this.grid.set(p.getX(), p.getY(), c));
     //renderizza mappa
     view.refresh();
+  }
+
+  @Override
+  public BrushManager.Brush getLocalBrush() {
+    return localBrush;
+  }
+
+  @Override
+  public void receiveBrushes(Set<BrushManager.Brush> brushes) throws RemoteException {
+    //System.out.println("BRUSHES RECEIVED: " + brushes.size());
+    //draw brushes
+
   }
 }

@@ -1,10 +1,13 @@
 package part3;
 
 
-public interface BrushService {
+import java.rmi.Remote;
+import java.rmi.RemoteException;
+import java.util.UUID;
 
-    void addBrush(final BrushManager.Brush brush);
+public interface BrushService extends Remote {
 
-    void removeBrush(final BrushManager.Brush brush);
-
+    void addBrush(PixelArt client) throws RemoteException;
+    void removeBrush(UUID clientId, BrushManager.Brush brush) throws RemoteException;
+    void receiveMovement(BrushManager.Brush brush) throws RemoteException;
 }

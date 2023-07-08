@@ -41,6 +41,7 @@ public class BrushManager implements Serializable {
         private static final UUID serialVersionUID = UUID.randomUUID();
         private int x, y;
         private int color;
+
         public Brush(final int x, final int y, final int color) {
             this.x = x;
             this.y = y;
@@ -64,6 +65,8 @@ public class BrushManager implements Serializable {
         public void setColor(int color){
             this.color = color;
         }
-
+        public UUID getBrushId() {
+            return serialVersionUID;
+        }
     }
 }
