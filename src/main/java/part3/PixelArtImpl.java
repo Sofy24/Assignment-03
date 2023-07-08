@@ -7,10 +7,11 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
 
-public class PixelArtImpl implements PixelArt, Serializable {
+public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Serializable {
 
   // Generate a random UUID
   private static final UUID serialVersionUID = UUID.randomUUID();
@@ -47,6 +48,7 @@ public class PixelArtImpl implements PixelArt, Serializable {
 
     //listener for the addition of the pixel
     view.addPixelGridEventListener((x, y) -> {
+      System.out.println("CLIKED");
       this.gridService.setPixel(x, y, localBrush.getColor());
     });
 
@@ -105,6 +107,7 @@ public class PixelArtImpl implements PixelArt, Serializable {
 
   @Override
   public void receiveGrid(Map<Pair<Integer, Integer>, Integer> map) {
+    System.out.println("GRID RECEIVED: " + map.size());
     this.coloredPixels.putAll(map);
     this.coloredPixels.forEach((p, c) -> this.grid.set(p.getX(), p.getY(), c));
     //renderizza mappa

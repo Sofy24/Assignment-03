@@ -3,8 +3,12 @@ package part3;
  * A standard generic Pair<X,Y>, with getters, hashCode, equals, and toString well implemented. 
  */
 
-public class Pair<X,Y> {
-	
+import java.io.Serializable;
+import java.util.UUID;
+
+public class Pair<X,Y> implements Serializable {
+
+	private static final UUID serialVersionUID = UUID.randomUUID();
 	private final X x;
 	private final Y y;
 	

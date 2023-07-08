@@ -2,6 +2,7 @@ package part3;
 
 import scala.Int;
 
+import java.rmi.RemoteException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -12,7 +13,7 @@ public class GridServiceImpl implements GridService {
     List<PixelArt> clients = new ArrayList<>();
 
     @Override
-    public void register(PixelArt identifier) {
+    public void register(PixelArt identifier) throws RemoteException {
         clients.add(identifier);
         identifier.receiveGrid(grid);
     }
@@ -26,7 +27,13 @@ public class GridServiceImpl implements GridService {
     public void setPixel(Integer x, Integer y, Integer color) {
         this.grid.put(new Pair<>(x, y), color);
         //notifica aggiornamento
-        this.clients.forEach(c -> c.receiveGrid(this.grid));
+        this.clients.forEach(c -> {
+            try {
+                c.receiveGrid(this.grid);
+            } catch (RemoteException e) {
+                throw new RuntimeException(e);
+            }
+        });
     }
 
 
