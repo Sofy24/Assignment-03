@@ -3,6 +3,7 @@ package part3;
 import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.IOException;
 import java.io.Serializable;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -19,6 +20,9 @@ public class PixelArtImpl implements PixelArt, Serializable {
   private Map<Pair<Integer, Integer>, Integer> coloredPixels = new HashMap<>();
   private PixelGridView view = new PixelGridView(grid, brushManager, 800, 600);
   private GridService gridService;
+
+  public PixelArtImpl() throws IOException {
+  }
 
   public void configuration()  {
     try {
