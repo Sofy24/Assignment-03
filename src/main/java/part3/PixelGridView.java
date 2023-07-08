@@ -1,12 +1,14 @@
 package part3;
 
+import part3.serializers.SerializableBufferedImage;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,7 +67,26 @@ public class PixelGridView extends JFrame {
 	public void addColorChangedListener(ColorChangeListener l) { colorChangeListeners.add(l); }
 
 	private void hideCursor() {
-		var cursorImage = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		SerializableBufferedImage cursorImage = new SerializableBufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		try (FileOutputStream fileOut = new FileOutputStream("image.ser");
+			 ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
+			out.writeObject(cursorImage);
+
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		try (FileInputStream fileIn = new FileInputStream("image.ser");
+			 ObjectInputStream in = new ObjectInputStream(fileIn)) {
+			cursorImage = (SerializableBufferedImage) in.readObject();
+			System.out.println("Image deserialized successfully.");
+			// Use the deserialized image object as needed
+		} catch (IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+
+
+		//var cursorImage = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
 		var blankCursor = Toolkit.getDefaultToolkit()
 				.createCustomCursor(cursorImage, new Point(0, 0), "blank cursor");
 		// Set the blank cursor to the JFrame.
