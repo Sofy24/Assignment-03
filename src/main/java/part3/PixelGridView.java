@@ -22,7 +22,7 @@ public class PixelGridView extends JFrame {
 
 	private final List<ColorChangeListener> colorChangeListeners;
     
-    public PixelGridView(PixelGrid grid, BrushManager brushManager, int w, int h){
+    public PixelGridView(PixelGrid grid, BrushManager brushManager, int w, int h) throws IOException {
 		this.grid = grid;
 		this.w = w;
 		this.h = h;
@@ -66,8 +66,10 @@ public class PixelGridView extends JFrame {
 
 	public void addColorChangedListener(ColorChangeListener l) { colorChangeListeners.add(l); }
 
-	private void hideCursor() {
-		SerializableBufferedImage cursorImage = new SerializableBufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+	private void hideCursor() throws IOException {
+		//SerializableBufferedImage cursorImage = new SerializableBufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+		//ImageIcon cursorImage = new ImageIcon(16, 16, BufferedImage.TYPE_INT_ARGB);
+		var cursorImage = "";
 		try (FileOutputStream fileOut = new FileOutputStream("image.ser");
 			 ObjectOutputStream out = new ObjectOutputStream(fileOut)) {
 			out.writeObject(cursorImage);
@@ -78,17 +80,20 @@ public class PixelGridView extends JFrame {
 
 		try (FileInputStream fileIn = new FileInputStream("image.ser");
 			 ObjectInputStream in = new ObjectInputStream(fileIn)) {
-			cursorImage = (SerializableBufferedImage) in.readObject();
+			cursorImage = (String) in.readObject();
 			System.out.println("Image deserialized successfully.");
 			// Use the deserialized image object as needed
 		} catch (IOException | ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 
-
-		//var cursorImage = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-		var blankCursor = Toolkit.getDefaultToolkit()
-				.createCustomCursor(cursorImage, new Point(0, 0), "blank cursor");
+/*
+		var cursorImages = new ImageIcon();
+		var blankCursor = Cursor()
+*/
+		var blankCursor = new Cursor(Cursor.HAND_CURSOR);
+		/*var blankCursor = Toolkit.getDefaultToolkit()
+				.createCustomCursor(cursorImage.getImage(), new Point(0, 0), "blank cursor");*/
 		// Set the blank cursor to the JFrame.
 		this.getContentPane().setCursor(blankCursor);
 	}
