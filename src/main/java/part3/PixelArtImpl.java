@@ -11,25 +11,23 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.*;
 
-
 public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Serializable {
 
   // Generate a random UUID
   private static final UUID serialVersionUID = UUID.randomUUID();
-  private BrushManager brushManager = new BrushManager();
-  private BrushManager.Brush localBrush = new BrushManager.Brush(0, 0, randomColor());
-  private PixelGrid grid = new PixelGrid(40, 40);
-  private Map<Pair<Integer, Integer>, Integer> coloredPixels = new HashMap<>();
-  private PixelGridView view = new PixelGridView(grid, brushManager, 800, 600);
+  private final BrushManager brushManager = new BrushManager();
+  private final BrushManager.Brush localBrush = new BrushManager.Brush(0, 0, randomColor());
+  private final PixelGrid grid = new PixelGrid(40, 40);
+  private final Map<Pair<Integer, Integer>, Integer> coloredPixels = new HashMap<>();
+  private final PixelGridView view = new PixelGridView(grid, brushManager, 800, 600);
   private GridService gridService;
-
   private BrushService brushService;
   public PixelArtImpl() throws IOException {
   }
 
+  //configuration of RMI and graphic details. Set of the listeners
   public void configuration()  {
     try {
-      System.out.println("CLIENT: "+ serialVersionUID +" BRUSH: "+ getLocalBrush().getBrushId());
       Registry registry = LocateRegistry.getRegistry(null);
       this.gridService = (GridService) registry.lookup("grid");
       this.brushService = (BrushService) registry.lookup("brush");
@@ -37,8 +35,6 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
       //registration of the client
       gridService.register(this);
       brushService.addBrush(this);
-      //deve essere serializzabile
-      //gridService.setPixel(0, 0, 0);
     } catch (Exception e) {
       System.err.println("Client exception: " + e);
       e.printStackTrace();
@@ -55,7 +51,6 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
 
     //listener for the addition of the pixel
     view.addPixelGridEventListener((x, y) -> {
-      System.out.println("CLIKED");
       this.gridService.setPixel(x, y, localBrush.getColor());
     });
 
@@ -75,20 +70,14 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
         } catch (RemoteException ex) {
           throw new RuntimeException(ex);
         }
-        //String brushId = localBrush.getIdBrush();
-        //registration.exit(identifier);
       }
     });
 
     view.display();
   }
 
+  //get the client id
   public UUID getClientId() {return serialVersionUID;}
-
-  public static void main(String[] args) throws Exception {
-    PixelArt pixelArt = new PixelArtImpl();
-    pixelArt.configuration();
-    }
 
   //get a random color
   public static int randomColor() {
@@ -96,46 +85,26 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
     return rand.nextInt(256 * 256 * 256);
   }
 
-  //update of the colored pixels
-  public static void updateColor(String message, PixelGridView view, PixelGrid grid, Map<Pair<Integer, Integer>, Integer> coloredPixels){
-    SwingUtilities.invokeLater(() -> {
 
-      //grid.set(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1]), Integer.parseInt(messageContent[2]));
-      view.refresh();
-      //coloredPixels.put(new Pair<>(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1])), Integer.parseInt(messageContent[2]));
-    });
-  }
-
-  //update of the movement of the mouse
-  private static void updateMouse(String message, PixelGridView view, BrushManager brushManager) {
-    SwingUtilities.invokeLater(() -> {
-
-      //BrushManager.Brush currentBrush = brushManager.getBrushFromInfo(messageContent);
-      //currentBrush.updatePosition(Integer.parseInt(messageContent[0]), Integer.parseInt(messageContent[1]));
-      view.refresh();
-    });
-  }
-
-
-
+  //received the grid from the service and its render
   @Override
   public void receiveGrid(Map<Pair<Integer, Integer>, Integer> map) {
-    System.out.println("GRID RECEIVED: " + map.size());
     this.coloredPixels.putAll(map);
     this.coloredPixels.forEach((p, c) -> this.grid.set(p.getX(), p.getY(), c));
-    //renderizza mappa
-    view.refresh();
+    SwingUtilities.invokeLater(view::refresh);
   }
 
+  //get the local brush
   @Override
   public BrushManager.Brush getLocalBrush() {
     return localBrush;
   }
 
+  //receive the brushes from the service and their render
   @Override
   public void receiveBrushes(Set<BrushManager.Brush> brushes) throws RemoteException {
-    System.out.println("BRUSHES RECEIVED: " + brushes.size());
+    this.brushManager.addAllBrushes(brushes);
     //draw brushes
-
+    SwingUtilities.invokeLater(view::refresh);
   }
 }

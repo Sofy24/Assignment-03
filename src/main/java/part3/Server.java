@@ -14,20 +14,16 @@ public class Server {
             GridService gridStub = (GridService) UnicastRemoteObject.exportObject(gridService, 0);
             BrushService brushService = new BrushServiceImpl();
             BrushService brushStub = (BrushService) UnicastRemoteObject.exportObject(brushService, 0);
-            /*RegisterService registration = new RegisterServiceImpl();
-            RegisterService registrationStub = (RegisterService) UnicastRemoteObject.exportObject(registration, 0);*/
 
             // Bind the remote object's stub in the registry
-            //Registry registry = LocateRegistry.getRegistry();
             registry.rebind("grid", gridStub);
             registry.rebind("brush", brushStub);
-            //registry.rebind("brush", brushStub);
-            //registry.rebind("registration", registrationStub);
+
 
             
             System.out.println("Objects registered.");
         } catch (Exception e) {
-            System.err.println("Server exception: " + e.toString());
+            System.err.println("Server exception: " + e);
             e.printStackTrace();
         }
     }

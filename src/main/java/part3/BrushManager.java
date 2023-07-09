@@ -3,20 +3,17 @@ package part3;
 
 import java.awt.*;
 import java.io.Serializable;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 public class BrushManager implements Serializable {
-
     // Generate a random UUID
     private static final UUID serialVersionUID = UUID.randomUUID();
     private static final int BRUSH_SIZE = 10;
     private static final int STROKE_SIZE = 2;
     private Set<Brush> brushes = new HashSet<>();
-
     void draw(final Graphics2D g) {
-        brushes.forEach(brush -> {
+        Set<Brush> brushesCopy = new HashSet<>(brushes);
+        brushesCopy.forEach(brush -> {
             g.setColor(new Color(brush.color));
             var circle = new java.awt.geom.Ellipse2D.Double(brush.x - BRUSH_SIZE / 2.0, brush.y - BRUSH_SIZE / 2.0, BRUSH_SIZE, BRUSH_SIZE);
             // draw the polygon
@@ -27,12 +24,13 @@ public class BrushManager implements Serializable {
         });
     }
 
-    public void addBrush(final Brush brush) {
-        brushes.add(brush);
+    public void addAllBrushes(final Set<Brush> brushes) {
+        this.brushes.clear();
+        this.brushes.addAll(brushes);
     }
 
-    public void removeBrush(final Brush brush) {
-        brushes.remove(brush);
+    public void addBrush(final Brush brush) {
+        brushes.add(brush);
     }
 
     public static class Brush implements Serializable{
