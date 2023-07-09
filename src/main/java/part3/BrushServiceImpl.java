@@ -28,20 +28,22 @@ public class BrushServiceImpl implements BrushService{
             }
         }).collect(Collectors.toList());
         brushes.remove(clientId);
-        sendBrushes();
+        sendBrushes(clientId);
     }
 
     @Override
     public synchronized void receiveMovement(UUID clientId, BrushManager.Brush brush) throws RemoteException {
         brushes.put(clientId, brush);
-        sendBrushes();
+        sendBrushes(clientId);
     }
 
-    private void sendBrushes() {
+    private void sendBrushes(UUID clientId) {
         Set<BrushManager.Brush> brushSet = new HashSet<>(brushes.values());
         clients.forEach(c -> {
             try {
-                c.receiveBrushes(brushSet);
+                if (!c.getClientId().equals(clientId)) {
+                    c.receiveBrushes(brushSet);
+                }
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }
