@@ -40,7 +40,6 @@ public class MasterActor extends AbstractActor {
             worker.tell(new MessageProtocol.ReceiveFilesMessage(fileList.subList(i * FILES_PER_ACTOR,
                     Math.min((i + 1) * FILES_PER_ACTOR, numberOfFiles)), ranges, this.getSelf()), this.getSelf());
             workers.add(worker);
-            getContext().watch(worker);
         }
     }
 
