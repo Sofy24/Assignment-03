@@ -8,18 +8,18 @@ public class BrushServiceImpl implements BrushService{
 
     private List<PixelArt> clients = new ArrayList<>();
 
-    private Set<BrushManager.Brush> brushes = new HashSet<>();
+    private final Map<UUID, BrushManager.Brush> brushes = new HashMap<>();
 
     @Override
-    public void addBrush(PixelArt client) throws RemoteException {
+    public synchronized void addBrush(PixelArt client) throws RemoteException {
         System.out.println("ADD BRUSH:" + client.getClientId()+" "+client.getLocalBrush().getBrushId().toString());
         clients.add(client);
-        brushes.add(client.getLocalBrush());
-        client.receiveBrushes(brushes);
+        brushes.put(client.getClientId(), client.getLocalBrush());
+        client.receiveBrushes(new HashSet<>(brushes.values()));
     }
 
     @Override
-    public void removeBrush(UUID clientId, BrushManager.Brush brush) throws RemoteException {
+    public synchronized void removeBrush(UUID clientId, BrushManager.Brush brush) throws RemoteException {
         clients = clients.stream().filter(c -> {
             try {
                 return !c.getClientId().equals(clientId);
@@ -27,30 +27,21 @@ public class BrushServiceImpl implements BrushService{
                 throw new RuntimeException(e);
             }
         }).collect(Collectors.toList());
-        brushes = brushes.stream().filter(b -> {
-            return ! b.getBrushId().equals(brush.getBrushId());
-        }).collect(Collectors.toSet());
-        clients.forEach(c -> {
-            try {
-                c.receiveBrushes(brushes);
-            } catch (RemoteException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        brushes.remove(clientId);
+        sendBrushes();
     }
 
     @Override
-    public void receiveMovement(BrushManager.Brush brush) throws RemoteException {
-        brushes = brushes.stream().map(b -> {
-            if (b.getBrushId().equals(brush.getBrushId())) {
-                return brush;
-            } else {
-                return b;
-            }
-        }).collect(Collectors.toSet());
+    public synchronized void receiveMovement(UUID clientId, BrushManager.Brush brush) throws RemoteException {
+        brushes.put(clientId, brush);
+        sendBrushes();
+    }
+
+    private void sendBrushes() {
+        Set<BrushManager.Brush> brushSet = new HashSet<>(brushes.values());
         clients.forEach(c -> {
             try {
-                c.receiveBrushes(brushes);
+                c.receiveBrushes(brushSet);
             } catch (RemoteException e) {
                 throw new RuntimeException(e);
             }

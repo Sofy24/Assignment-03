@@ -48,7 +48,7 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
     //listener for the movement of the mouse
     view.addMouseMovedListener((x, y) -> {
       localBrush.updatePosition(x, y);
-      brushService.receiveMovement(localBrush);
+      brushService.receiveMovement(getClientId(), localBrush);
       view.refresh();
 
     });
@@ -71,6 +71,7 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
         System.out.println("User is leaving...");
         try {
           brushService.removeBrush(getClientId(), getLocalBrush());
+          gridService.exit(getClientId());
         } catch (RemoteException ex) {
           throw new RuntimeException(ex);
         }
@@ -133,7 +134,7 @@ public class PixelArtImpl extends UnicastRemoteObject implements PixelArt, Seria
 
   @Override
   public void receiveBrushes(Set<BrushManager.Brush> brushes) throws RemoteException {
-    //System.out.println("BRUSHES RECEIVED: " + brushes.size());
+    System.out.println("BRUSHES RECEIVED: " + brushes.size());
     //draw brushes
 
   }
